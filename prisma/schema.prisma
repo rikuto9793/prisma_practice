@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum CompanyRole {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  profile        Profile?
+  posts          Post[]
+  likes          Like[]
+  bookmarks      Bookmark[]
+  companyUsers   CompanyUser[]
+  adminUsers     AdminUser[]
+
+  @@map("users")
+}
+
+model Profile {
+  id             BigInt   @id @default(autoincrement())
+  userId         String   @unique @map("user_id") @db.Uuid
+  userIdentifier String   @map("user_identifier") @db.VarChar(255)
+  phoneNumber    String   @map("phone_number") @db.VarChar(255)
+  birthDate      DateTime @map("birth_date") @db.Date
+  userName       String   @map("user_name") @db.VarChar(255)
+  graduationYear Int      @map("graduation_year")
+  gender         Gender
+  affiliation    String   @db.VarChar(255)
+  realName       String   @map("real_name") @db.VarChar(255)
+  realNameKana   String   @map("real_name_kana") @db.VarChar(255)
+  userSei        String   @map("user_sei") @db.VarChar(255)
+  userSeiKana    String   @map("user_sei_kana") @db.VarChar(255)
+  userMeiKana    String   @map("user_mei_kana") @db.VarChar(255)
+  completed      Boolean
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model Post {
+  id             BigInt   @id @default(autoincrement())
+  userId         String   @map("user_id") @db.Uuid
+  content        String   @db.Text
+  likesCount     BigInt   @default(0) @map("likes_count")
+  bookmarksCount BigInt   @default(0) @map("bookmarks_count")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  user                  User                   @relation(fields: [userId], references: [id])
+  likes                 Like[]
+  bookmarks             Bookmark[]
+  companyBookmarks      CompanyBookmark[]
+  defaultTagRelations   DefaultTagRelation[]
+  limitedTagRelations   LimitedTagRelation[]
+
+  @@map("posts")
+}
+
+model DefaultTag {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  defaultTagRelations DefaultTagRelation[]
+
+  @@map("default_tags")
+}
+
+model DefaultTagRelation {
+  id           BigInt   @id @default(autoincrement())
+  postId       BigInt   @map("post_id")
+  defaultTagId BigInt   @map("default_tag_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  post       Post       @relation(fields: [postId], references: [id])
+  defaultTag DefaultTag @relation(fields: [defaultTagId], references: [id])
+
+  @@unique([postId, defaultTagId])
+  @@map("default_tag_relations")
+}
+
+model LimitedTag {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  startAt   DateTime @map("start_at") @db.Date
+  expiredAt DateTime @map("expired_at") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  limitedTagRelations LimitedTagRelation[]
+
+  @@map("limited_tags")
+}
+
+model LimitedTagRelation {
+  id            BigInt   @id @default(autoincrement())
+  postId        BigInt   @map("post_id")
+  limitedTagId  Int      @map("limited_tag_id")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  post       Post       @relation(fields: [postId], references: [id])
+  limitedTag LimitedTag @relation(fields: [limitedTagId], references: [id])
+
+  @@unique([postId, limitedTagId])
+  @@map("limited_tag_relations")
+}
+
+model Like {
+  id        BigInt   @id @default(autoincrement())
+  userId    String   @map("user_id") @db.Uuid
+  postId    BigInt   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Bookmark {
+  id        BigInt   @id @default(autoincrement())
+  userId    String   @map("user_id") @db.Uuid
+  postId    BigInt   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("bookmarks")
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  companyUsers     CompanyUser[]
+  inviteCodes      InviteCode[]
+  companyBookmarks CompanyBookmark[]
+
+  @@map("companies")
+}
+
+model CompanyUser {
+  id        BigInt      @id @default(autoincrement())
+  userId    String      @map("user_id") @db.Uuid
+  companyId Int         @map("company_id")
+  role      CompanyRole
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([userId, companyId])
+  @@map("company_users")
+}
+
+model InviteCode {
+  id        BigInt      @id @default(autoincrement())
+  code      String      @unique @db.VarChar(255)
+  companyId Int         @map("company_id")
+  role      CompanyRole
+  maxUses   Int         @map("max_uses")
+  usedCount Int         @default(0) @map("used_count")
+  expiresAt DateTime    @map("expires_at") @db.Date
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("invite_codes")
+}
+
+model CompanyBookmark {
+  id        BigInt   @id @default(autoincrement())
+  postId    BigInt   @map("post_id")
+  companyId Int      @map("company_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  post    Post    @relation(fields: [postId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([postId, companyId])
+  @@map("company_bookmarks")
+}
+
+model AdminUser {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id") @db.Uuid
+  role      AdminRole
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("admin_users")
+}

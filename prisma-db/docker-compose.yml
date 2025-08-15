@@ -1,0 +1,17 @@
+# docker-compose.yml
+
+services:
+  db:
+    image: postgres:15 # ✅ PostgreSQLのバージョンを15に変更
+    container_name: prisma-practice
+    ports:
+      - "4545:5432" # デフォルトだと5432:5432
+    environment:
+      POSTGRES_USER: kunkunkun
+      POSTGRES_PASSWORD: kun123
+      POSTGRES_DB: prisma_practice_development
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
