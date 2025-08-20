@@ -91,7 +91,7 @@ export default function () {
 
           </form>
           {/* 登録ボタン */}
-          <button className="h-16 w-88 bg-pink-400 text-xl text-white font-bold border border-pink-600 rounded-2xl mt-16">登録する</button>
+          <button type="submit" className="h-16 w-88 bg-pink-400 text-xl text-white font-bold border border-pink-600 rounded-2xl mt-16">登録する</button>
         </div>
       </div >
     </>
