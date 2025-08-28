@@ -64,6 +64,12 @@ model Profile {
   completed      Boolean
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  nickname    String   @map("nickname") @db.VarChar(255)  // ニックネーム
+  childrenAge Int      @map("children_age")               // 子どもの年齢
+  childrenNum Int      @map("children_num")               // 子どもの人数
+  location    String   @map("location") @db.VarChar(255)  // 住んでいる場所（市まで）
+  isBeginner  Boolean  @map("is_beginner")                // true: 新米, false: ベテラン
+
 
   // Relations
   user User @relation(fields: [userId], references: [id])
